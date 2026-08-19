@@ -14,21 +14,21 @@ if (!apiKey) {
 
 const client = new Anthropic({ apiKey });
 
-const stream = client.messages.stream({
-  model: "claude-sonnet-5",
-  max_tokens: 1024,
-  messages: [
-    {
-      role: "user",
-      content:
-        "Write a short, upbeat product description for an insulated water bottle.",
-    },
-  ],
-});
-
 try {
+  const stream = client.messages.stream({
+    model: "claude-sonnet-5",
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "user",
+        content:
+          "Write a short, upbeat product description for an insulated water bottle.",
+      },
+    ],
+  });
+
   // `text` fires once per text delta — write it straight to stdout so the
-  // reader sees the response build up token by token.
+  // reader sees the response build up incrementally instead of all at once.
   stream.on("text", (delta) => process.stdout.write(delta));
 
   const message = await stream.finalMessage();
@@ -44,7 +44,9 @@ try {
   } else if (error instanceof Anthropic.RateLimitError) {
     console.error("Error: rate limited by the Claude API — retry shortly.");
   } else if (error instanceof Anthropic.APIError) {
-    console.error(`Error: Claude API returned ${error.status}: ${error.message}`);
+    console.error(
+      `Error: Claude API returned ${error.status}: ${error.message}`,
+    );
   } else {
     console.error(`Error: ${error.message}`);
   }
